@@ -138,6 +138,7 @@ impl Window {
     /// Allow the user to select an existing file using the systems file dialog
     pub fn open_file(&self) -> Option<PathBuf> {
         let ptr = unsafe { libui_ffi::uiOpenFile(self.uiWindow) };
+        self.clone().show();
         if ptr.is_null() {
             return None;
         };
@@ -151,6 +152,7 @@ impl Window {
     /// Allow the user to select a new or existing file using the systems file dialog.
     pub fn save_file(&self) -> Option<PathBuf> {
         let ptr = unsafe { libui_ffi::uiSaveFile(self.uiWindow) };
+        self.clone().show();
         if ptr.is_null() {
             return None;
         };
@@ -164,6 +166,7 @@ impl Window {
     /// Allow the user to select a single folder using the systems folder dialog.
     pub fn open_folder(&self) -> Option<PathBuf> {
         let ptr = unsafe { libui_ffi::uiOpenFolder(self.uiWindow) };
+        self.clone().show();
         if ptr.is_null() {
             return None;
         };
