@@ -108,6 +108,49 @@ impl Window {
         }
     }
 
+    /// Gets the window position on the screen.
+    /// Coordinates are measured from the top-left corner of the screen.
+    /// 
+    /// This method may return inaccurate or dummy values on Unix platforms.
+    pub fn position(&self) -> (i32, i32) {
+        let mut x_pos: c_int = 0;
+        let mut y_pos: c_int = 0;
+        unsafe { libui_ffi::uiWindowPosition(self.uiWindow, &mut x_pos, &mut y_pos) }
+
+        (x_pos.into(), y_pos.into())
+    }
+
+    /// Moves the window to the specified position on the screen.
+    /// Coordinates are measured from the top-left corner of the screen.
+    /// 
+    /// This method is merely a hint and may be ignored on Unix platforms.
+    pub fn set_position(&mut self, x_position: i32, y_position: i32) {
+        unsafe { libui_ffi::uiWindowSetPosition(self.uiWindow, x_position, y_position) }
+    }
+
+    /// Sets a callback to be run when the user changes the window's position.
+    ///
+    /// Note that this callback does not trigger when the window is moved through the `set_position` method.
+    /// It triggers when the user drags the window across the screen, not when the application changes its own position.
+    pub fn on_position_changed<'ctx, F>(&mut self, callback: F)
+    where
+        F: FnMut(&mut Window) + 'static,
+    {
+        extern "C" fn c_callback<G>(window: *mut uiWindow, data: *mut c_void)
+        where
+            G: FnMut(&mut Window),
+        {
+            let mut window = Window { uiWindow: window };
+            unsafe {
+                from_void_ptr::<G>(data)(&mut window);
+            }
+        }
+
+        unsafe {
+            libui_ffi::uiWindowOnPositionChanged(self.uiWindow, Some(c_callback::<F>), to_heap_ptr(callback));
+        }
+    }
+
     /// Check whether or not this window has margins around the edges.
     pub fn margined(&self) -> bool {
         unsafe { libui_ffi::uiWindowMargined(self.uiWindow) != 0 }
